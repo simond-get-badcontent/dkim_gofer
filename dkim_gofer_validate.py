@@ -261,6 +261,31 @@ def check_dmarc(domain):
         return False
 
 
+def fetch_spf_record(domain):
+    """Fetch SPF record for a domain, returns the raw SPF string or None."""
+    print(line_delimiter)
+    try:
+        answers = dns.resolver.resolve(domain, 'TXT')
+        for rdata in answers:
+            for txt in rdata.strings:
+                txt_str = txt.decode() if hasattr(txt, 'decode') else txt
+                if txt_str.startswith('v=spf1'):
+                    print(f"SPF record found for {domain}:\n")
+                    for pair in txt_str.split(' '):
+                        pair = pair.strip()
+                        if not pair:
+                            continue
+                        if '=' in pair:
+                            k, v = pair.split('=', 1)
+                            print(f"{k.strip()} = {v.strip()}")
+    except (dns.resolver.NXDOMAIN, dns.resolver.NoAnswer, dns.resolver.NoNameservers):
+        return None
+    except Exception as e:
+        print(f"Error querying SPF for {domain}: {e}")
+        return None
+    return None
+
+
 def main(eml_path):
     """
     Main function to do all the DKIM signature stuffs.
@@ -362,8 +387,10 @@ def main(eml_path):
     except Exception as e:
         print(f"Error during DKIM validation: {e}")
 
-    # Finish by printing out a possible DMARC record
+    # Print out a possible DMARC record
     check_dmarc(domain)
+    # Print out a possible SPF record
+    fetch_spf_record(domain)
 
 
 def super_cool_banner():
