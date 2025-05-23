@@ -14,6 +14,7 @@ import hashlib
 import rsa
 from email.policy import default
 import dkim
+import whois
 
 # --------------------------------------------------------------------------------------------------
 # DKIM Gofer - Validate
@@ -27,7 +28,7 @@ import dkim
 # 2025-05-23: Created and tested. //Simon
 # --------------------------------------------------------------------------------------------------
 # Install notes:
-# pip install argparse sys email re base64 dns.resolver hashlib rsa dkim
+# pip install argparse sys email re base64 dns.resolver hashlib rsa dkim python-whois
 # --------------------------------------------------------------------------------------------------
 # Current version:
 VERSION = "v. 0.1"
@@ -319,6 +320,23 @@ def check_dnssec(domain):
         return False
 
 
+def whodat(domain):
+    """
+    Fetches and prints basic WHOIS information for a given domain.
+    """
+    print(line_delimiter)
+    print("Domain WHOIS information:\n")
+    try:
+        w = whois.whois(domain)
+        print(f"Domain: {w.domain_name}")
+        print(f"Registrar: {w.registrar}")
+        print(f"Creation Date: {w.creation_date}")
+        print(f"Expiration Date: {w.expiration_date}")
+        print(f"Name Servers: {w.name_servers}")
+    except Exception as e:
+        print(f"Error fetching WHOIS info for {domain}: {e}")
+
+
 def main(eml_path):
     """
     Main function to do all the DKIM signature stuffs.
@@ -426,6 +444,8 @@ def main(eml_path):
     fetch_spf_record(domain)
     # Print out a possible DNSSEC record
     check_dnssec(domain)
+    # Print out WHOIS
+    whodat(domain)
 
 
 def super_cool_banner():
