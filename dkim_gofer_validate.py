@@ -286,6 +286,39 @@ def fetch_spf_record(domain):
     return None
 
 
+def check_dnssec(domain):
+    """
+    Checks if a domain has DNSSEC enabled by looking for a DNSKEY record
+    and a corresponding RRSIG record for the zone apex.
+    """
+    print(line_delimiter)
+    print("DNSSEC check:\n")
+    try:
+        # Query DNSKEY records
+        dnskey = dns.resolver.resolve(domain, 'DNSKEY', raise_on_no_answer=False)
+        if not dnskey.rrset:
+            print(f"No DNSKEY record found for {domain}. DNSSEC is not enabled.")
+            return False
+        print(f"DNSKEY record(s) found for {domain}.")
+        # Query RRSIG records for DNSKEY
+        try:
+            rrsig = dns.resolver.resolve(domain, 'RRSIG', raise_on_no_answer=False)
+            rrsig_found = any(rrsig.rrset) and any(r.type == dns.rdatatype.DNSKEY for r in rrsig.rrset)
+        except Exception:
+            rrsig_found = False
+        if rrsig_found:
+            print(f"RRSIG for DNSKEY found. DNSSEC appears to be enabled for {domain}.")
+        else:
+            print(f"DNSKEY found but no RRSIG for DNSKEY. DNSSEC may not be complete for {domain}.")
+        return rrsig_found
+    except (dns.resolver.NoAnswer, dns.resolver.NXDOMAIN, dns.resolver.NoNameservers):
+        print(f"No DNSKEY record found for {domain}. DNSSEC is not enabled.")
+        return False
+    except Exception as e:
+        print(f"DNSSEC check failed: {e}")
+        return False
+
+
 def main(eml_path):
     """
     Main function to do all the DKIM signature stuffs.
@@ -391,6 +424,8 @@ def main(eml_path):
     check_dmarc(domain)
     # Print out a possible SPF record
     fetch_spf_record(domain)
+    # Print out a possible DNSSEC record
+    check_dnssec(domain)
 
 
 def super_cool_banner():
