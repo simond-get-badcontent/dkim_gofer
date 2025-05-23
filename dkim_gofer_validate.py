@@ -369,7 +369,7 @@ def main(eml_path):
 def super_cool_banner():
     """This program will probably not even work without this."""
     print("\n" * 50)
-    print("""\x1b['\33[31m
+    print("""
 _______   __  ___  __  .___  ___.                  
 |       \ |  |/  / |  | |   \/   |                  
 |  .--.  ||  '  /  |  | |  \  /  |                  
@@ -393,7 +393,7 @@ _______   __  ___  __  .___  ___.
      '._  '---' _.'
         `-.___.-'
                                 Digging Life One Hole at a Time.
-    \x1b[0m""")
+    """)
 
 
 if __name__ == "__main__":
